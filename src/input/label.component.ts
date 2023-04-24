@@ -22,32 +22,31 @@ import { TextInput } from "./input.directive";
 @Component({
 	selector: "ibm-label",
 	template: `
-		<div
-			[ngClass]="{
-				'bx--text-input__label-helper-wrapper': isInline
-			}">
-			<label
-				[for]="labelInputID"
-				[attr.aria-label]="ariaLabel"
-				class="bx--label"
-				[ngClass]="{
-					'bx--label--disabled': disabled,
-					'bx--skeleton': skeleton,
-					'bx--label--inline': isInline,
-					'bx--label--inline--sm': (isInline && size === 'sm'),
-					'bx--label--inline--md': (isInline && size === 'md'),
-					'bx--label--inline--xl': (isInline && size === 'xl')
-				}">
-				<ng-content></ng-content>
-			</label>
-			<ng-template *ngIf="isInline"
-				[ngTemplateOutlet]="helperTextTemplate">
-			</ng-template>
-		</div>
-		<div class="bx--text-input__field-outer-wrapper"
-			[ngClass]="{
-			'bx--text-input__field-outer-wrapper--inline': isInline
-			}">
+		<!-- Use regular order for textarea & non inline -->
+		<ng-container *ngIf="!isInline">
+			<ng-template [ngTemplateOutlet]="labelTemplate"></ng-template>
+			<ng-template [ngTemplateOutlet]="inputTemplate"></ng-template>
+			<ng-template [ngTemplateOutlet]="helperTextTemplate"></ng-template>
+		</ng-container>
+
+		<!-- If inline, we wrap in div & add additional classes -->
+		<ng-container *ngIf="isInline">
+			<div class="bx--text-input__label-helper-wrapper">
+				<ng-template [ngTemplateOutlet]="labelTemplate"></ng-template>
+				<ng-template [ngTemplateOutlet]="helperTextTemplate"></ng-template>
+			</div>
+			<div class="bx--text-input__field-outer-wrapper bx--text-input__field-outer-wrapper--inline">
+				<ng-container [ngTemplateOutlet]="inputTemplate"></ng-container>
+			</div>
+		</ng-container>
+
+		<!-- Template for label content -->
+		<ng-template #labelContentTemplate>
+			<ng-content></ng-content>
+		</ng-template>
+
+		<!-- Template for icons & input content -->
+		<ng-template #inputTemplate>
 			<div
 				[class]="wrapperClass"
 				[ngClass]="{
@@ -78,11 +77,27 @@ import { TextInput } from "./input.directive";
 				</svg>
 				<ng-content select="input,textarea,div"></ng-content>
 			</div>
-			<ng-container *ngIf="!isInline"
-				[ngTemplateOutlet]="helperTextTemplate">
-			</ng-container>
-		</div>
+		</ng-template>
 
+		<!-- Label template -->
+		<ng-template #labelTemplate>
+			<label
+				[for]="labelInputID"
+				[attr.aria-label]="ariaLabel"
+				class="bx--label"
+				[ngClass]="{
+					'bx--label--disabled': disabled,
+					'bx--skeleton': skeleton,
+					'bx--label--inline': isInline,
+					'bx--label--inline--sm': isInline && size === 'sm',
+					'bx--label--inline--md': isInline && size === 'md',
+					'bx--label--inline--xl': isInline && size === 'xl'
+				}">
+				<ng-container *ngTemplateOutlet="labelContentTemplate"></ng-container>
+			</label>
+		</ng-template>
+
+		<!-- Helper Text & other state message template -->
 		<ng-template #helperTextTemplate>
 			<div *ngIf="!skeleton && helperText && ((!invalid && !isWarning) || isInline)"
 				class="bx--form__helper-text"
