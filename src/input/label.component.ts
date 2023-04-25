@@ -40,11 +40,6 @@ import { TextInput } from "./input.directive";
 			</div>
 		</ng-container>
 
-		<!-- Template for label content -->
-		<ng-template #labelContentTemplate>
-			<ng-content></ng-content>
-		</ng-template>
-
 		<!-- Template for icons & input content -->
 		<ng-template #inputTemplate>
 			<div
@@ -93,7 +88,7 @@ import { TextInput } from "./input.directive";
 					'bx--label--inline--md': isInline && size === 'md',
 					'bx--label--inline--xl': isInline && size === 'xl'
 				}">
-				<ng-container *ngTemplateOutlet="labelContentTemplate"></ng-container>
+				<ng-content></ng-content>
 			</label>
 		</ng-template>
 
