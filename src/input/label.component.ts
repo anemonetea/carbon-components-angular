@@ -12,7 +12,6 @@ import {
 } from "@angular/core";
 
 import { TextArea } from "./text-area.directive";
-import { TextInput } from "./input.directive";
 
 /**
  * [See demo](../../?path=/story/components-input--label)
@@ -22,32 +21,30 @@ import { TextInput } from "./input.directive";
 @Component({
 	selector: "ibm-label",
 	template: `
-		<div
-			[ngClass]="{
-				'bx--text-input__label-helper-wrapper': isInline
-			}">
-			<label
-				[for]="labelInputID"
-				[attr.aria-label]="ariaLabel"
-				class="bx--label"
-				[ngClass]="{
-					'bx--label--disabled': disabled,
-					'bx--skeleton': skeleton,
-					'bx--label--inline': isInline,
-					'bx--label--inline--sm': (isInline && size === 'sm'),
-					'bx--label--inline--md': (isInline && size === 'md'),
-					'bx--label--inline--xl': (isInline && size === 'xl')
-				}">
-				<ng-content></ng-content>
-			</label>
-			<ng-template *ngIf="isInline"
-				[ngTemplateOutlet]="helperTextTemplate">
-			</ng-template>
-		</div>
-		<div class="bx--text-input__field-outer-wrapper"
-			[ngClass]="{
-			'bx--text-input__field-outer-wrapper--inline': isInline
-			}">
+		<ng-container *ngIf="textArea">
+			<ng-template [ngTemplateOutlet]="labelTemplate"></ng-template>
+			<ng-template [ngTemplateOutlet]="inputTemplate"></ng-template>
+			<ng-template [ngTemplateOutlet]="helperTextTemplate"></ng-template>
+		</ng-container>
+		<ng-container *ngIf="!textArea && inline">
+			<div class="bx--text-input__label-helper-wrapper">
+				<ng-template [ngTemplateOutlet]="labelTemplate"></ng-template>
+				<ng-template [ngTemplateOutlet]="helperTextTemplate"></ng-template>
+			</div>
+			<div class="bx--text-input__field-outer-wrapper bx--text-input__field-outer-wrapper--inline">
+				<ng-container [ngTemplateOutlet]="inputTemplate"></ng-container>
+			</div>
+		</ng-container>
+		<ng-container *ngIf="!textArea && !inline">
+			<ng-template [ngTemplateOutlet]="labelTemplate"></ng-template>
+			<div class="bx--text-input__field-outer-wrapper">
+				<ng-container [ngTemplateOutlet]="inputTemplate"></ng-container>
+				<ng-template [ngTemplateOutlet]="helperTextTemplate"></ng-template>
+			</div>
+		</ng-container>
+
+		<!-- Template for icons & input content -->
+		<ng-template #inputTemplate>
 			<div
 				[class]="wrapperClass"
 				[ngClass]="{
@@ -78,11 +75,27 @@ import { TextInput } from "./input.directive";
 				</svg>
 				<ng-content select="input,textarea,div"></ng-content>
 			</div>
-			<ng-container *ngIf="!isInline"
-				[ngTemplateOutlet]="helperTextTemplate">
-			</ng-container>
-		</div>
+		</ng-template>
 
+		<!-- Label template -->
+		<ng-template #labelTemplate>
+			<label
+				[for]="labelInputID"
+				[attr.aria-label]="ariaLabel"
+				class="bx--label"
+				[ngClass]="{
+					'bx--label--disabled': disabled,
+					'bx--skeleton': skeleton,
+					'bx--label--inline': isInline,
+					'bx--label--inline--sm': isInline && size === 'sm',
+					'bx--label--inline--md': isInline && size === 'md',
+					'bx--label--inline--xl': isInline && size === 'xl'
+				}">
+				<ng-content></ng-content>
+			</label>
+		</ng-template>
+
+		<!-- Helper Text & validation state message template -->
 		<ng-template #helperTextTemplate>
 			<div *ngIf="!skeleton && helperText && ((!invalid && !isWarning) || isInline)"
 				class="bx--form__helper-text"
@@ -142,7 +155,7 @@ export class Label implements AfterContentChecked, AfterViewInit {
 		return this._readonly;
 	}
 	@HostBinding("class.bx--text-input-wrapper--readonly") get isReadonly(): boolean {
-		return this._readonly && this.textInput != undefined;
+		return this._readonly && this.textArea == undefined;
 	}
 	/**
 	 * Set to `true` for an isInline style label.
@@ -154,7 +167,7 @@ export class Label implements AfterContentChecked, AfterViewInit {
 		return this._inline;
 	}
 	@HostBinding("class.bx--text-input-wrapper--inline") get isInline(): boolean {
-		return this._inline && this.textInput != undefined;
+		return this._inline && this.textArea == undefined;
 	}
 	/**
 	 * Set to `true` for a loading label.
@@ -199,12 +212,9 @@ export class Label implements AfterContentChecked, AfterViewInit {
 	// @ts-ignore
 	@ContentChild(TextArea, { static: false }) textArea: TextArea;
 
-	// @ts-ignore
-	@ContentChild(TextInput, { static: false }) textInput: TextInput;
-
 	@HostBinding("class.bx--form-item") labelClass = true;
 	@HostBinding("class.bx--text-input-wrapper") get inputWrapperClass(): boolean {
-		return this.textInput != undefined;
+		return this.textArea == undefined;
 	}
 
 	protected _readonly = false;
@@ -224,7 +234,7 @@ export class Label implements AfterContentChecked, AfterViewInit {
 	ngAfterContentChecked() {
 		if (this.textArea != undefined && this.wrapperClass !== "bx--text-area__wrapper") {
 			this.wrapperClass = "bx--text-area__wrapper";
-		} else if (this.textInput != undefined && this.wrapperClass !== "bx--text-input__field-wrapper") {
+		} else if (this.textArea == undefined && this.wrapperClass !== "bx--text-input__field-wrapper") {
 			this.wrapperClass = "bx--text-input__field-wrapper";
 		}
 	}
